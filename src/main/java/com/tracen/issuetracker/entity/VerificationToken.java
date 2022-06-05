@@ -45,11 +45,11 @@ public class VerificationToken {
 		this.expirarionDate = calculateExpirationDate(EXPIRATION_TIME);
 	}
 	
-	public VerificationToken(String token) {
+	/*public VerificationToken(String token) {
 		super();
 		this.token = token;
 		this.expirarionDate = calculateExpirationDate(EXPIRATION_TIME);
-	}
+	}*/
 
 	private Date calculateExpirationDate(int expirationTime) {
 		Calendar calendar = Calendar.getInstance();

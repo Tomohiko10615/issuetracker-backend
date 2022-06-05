@@ -1,12 +1,13 @@
 package com.tracen.issuetracker.controller;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,6 @@ import com.tracen.issuetracker.model.PasswordModel;
 import com.tracen.issuetracker.model.UserModel;
 import com.tracen.issuetracker.service.UserService;
 
-import ch.qos.logback.classic.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -34,21 +34,28 @@ public class RegistrationController {
 	
 	@Autowired
 	private ApplicationEventPublisher publisher;
+	
+	private String rootUrl = "http://localhost:3000";
 
 	@PostMapping("/register")
-	public ResponseEntity<String> registerUser(@RequestBody UserModel userModel, final HttpServletRequest request) {
-		if (!userModel.getPassword().equals(userModel.getMatchingPassword())) {
-			return ResponseEntity.badRequest().build();
-		}
+	public String registerUser(@RequestBody UserModel userModel, final HttpServletRequest request) {
 		User user = userService.registerUser(userModel);
 		String url = applicationUrl(request);
-		publisher.publishEvent(new RegistrationCompleteEvent(user, url));
-		return ResponseEntity.ok("Success");
+		new Thread(() -> {
+			publisher.publishEvent(new RegistrationCompleteEvent(user, url));
+		}).start();
+		return "success";
 	}
 	
+	
 	@GetMapping("/verifyRegistration")
-	public String verifyRegistration(@RequestParam("token") String token) {
-		return userService.validateVerificationToken(token);
+	public void verifyRegistration(@RequestParam("token") String token, HttpServletResponse response) throws IOException {
+		String result = userService.validateVerificationToken(token);
+		switch (result) {
+		case "valid": response.sendRedirect(rootUrl + "/pages/success"); break;
+		case "expired": response.sendRedirect(rootUrl + "/pages/expired"); break;
+		case "invalid": response.sendRedirect(rootUrl + "/pages/invalid"); break;
+		}
 	}
 	
 	@GetMapping("/resendVerificationToken")

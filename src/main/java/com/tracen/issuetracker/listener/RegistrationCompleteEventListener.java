@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.tracen.issuetracker.entity.User;
 import com.tracen.issuetracker.event.RegistrationCompleteEvent;
+import com.tracen.issuetracker.service.EmailSenderService;
 import com.tracen.issuetracker.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,9 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
 
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private EmailSenderService emailSenderService;
 	
 	@Override
 	public void onApplicationEvent(RegistrationCompleteEvent event) {
@@ -31,7 +35,11 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
 				token;
 		
 		// Send email
-		log.info(url);
+		
+		String subject = "Confirm your email address";
+		String body = "Please confirm your email by clicking the following link: " + url;
+		
+		emailSenderService.sendEmail(user.getEmail(), subject, body);
 	}
 
 }
